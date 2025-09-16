@@ -1,0 +1,61 @@
+# TODO: Раскомментить волюмы, если понадобится.
+#volumes:
+#  postgres_data:
+#  redis_data:
+#  glitchtip_data:
+
+x-app: &app
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "3"
+      max-size: "10m"
+  env_file:
+    - .env
+  restart: no
+
+services:
+  postgres:
+    <<: *app
+    image: postgres:17
+    container_name: glitchtip_postgres
+    ports:
+      - ${POSTGRES_PORT}:5432
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    <<: *app
+    image: redis:7.4.5
+    container_name: glitchtip_redis
+    volumes:
+      - ./src/redis/redis.conf:/usr/local/etc/redis/redis.conf
+#      - redis_data:/data
+    ports:
+      - ${REDIS_PORT}:6379
+
+# TODO: Можно в пару коммитов запушить в своей гитхаб
+
+  glitchtip_web:
+    <<: *app
+    build:
+      context: ./src/glitchtip
+      dockerfile: ./Dockerfile
+    container_name: glitchtip_web
+    ports:
+      - ${GLITCHTIP_PORT}:8000
+    depends_on:
+      - postgres
+      - redis
+#    volumes:
+#      - glitchtip_data:/code/uploads
+
+  glitchtip_worker:
+    <<: *app
+    image: glitchtip/glitchtip:v5.1.1
+    container_name: glitchtip_worker
+    command: ./bin/run-celery-with-beat.sh
+    depends_on:
+      - glitchtip_web
+#    volumes:
+#      - glitchtip_data:/code/uploads
