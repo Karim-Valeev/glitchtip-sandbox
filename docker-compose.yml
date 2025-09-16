@@ -1,8 +1,7 @@
-# TODO: Раскомментить волюмы, если понадобится.
-#volumes:
-#  postgres_data:
-#  redis_data:
-#  glitchtip_data:
+volumes:
+  postgres_data:
+  redis_data:
+  glitchtip_data:
 
 x-app: &app
   logging:
@@ -21,8 +20,8 @@ services:
     container_name: glitchtip_postgres
     ports:
       - ${POSTGRES_PORT}:5432
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     <<: *app
@@ -30,11 +29,9 @@ services:
     container_name: glitchtip_redis
     volumes:
       - ./src/redis/redis.conf:/usr/local/etc/redis/redis.conf
-#      - redis_data:/data
+      - redis_data:/data
     ports:
       - ${REDIS_PORT}:6379
-
-# TODO: Можно в пару коммитов запушить в своей гитхаб
 
   glitchtip_web:
     <<: *app
@@ -47,8 +44,8 @@ services:
     depends_on:
       - postgres
       - redis
-#    volumes:
-#      - glitchtip_data:/code/uploads
+    volumes:
+      - glitchtip_data:/code/uploads
 
   glitchtip_worker:
     <<: *app
@@ -57,5 +54,5 @@ services:
     command: ./bin/run-celery-with-beat.sh
     depends_on:
       - glitchtip_web
-#    volumes:
-#      - glitchtip_data:/code/uploads
+    volumes:
+      - glitchtip_data:/code/uploads
